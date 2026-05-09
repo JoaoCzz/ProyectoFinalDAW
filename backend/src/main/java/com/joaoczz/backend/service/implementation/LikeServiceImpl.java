@@ -1,7 +1,15 @@
 package com.joaoczz.backend.service.implementation;
 
-import com.joaoczz.backend.persistence.entity.*;
-import com.joaoczz.backend.persistence.repository.*;
+import com.joaoczz.backend.persistence.entity.CommentEntity;
+import com.joaoczz.backend.persistence.entity.LikeCommentEntity;
+import com.joaoczz.backend.persistence.entity.LikePostEntity;
+import com.joaoczz.backend.persistence.entity.PostEntity;
+import com.joaoczz.backend.persistence.entity.UserEntity;
+import com.joaoczz.backend.persistence.repository.CommentRepository;
+import com.joaoczz.backend.persistence.repository.LikeCommentRepository;
+import com.joaoczz.backend.persistence.repository.LikePostRepository;
+import com.joaoczz.backend.persistence.repository.PostRepository;
+import com.joaoczz.backend.persistence.repository.UserRepository;
 import com.joaoczz.backend.presentation.advice.ResourceNotFoundException;
 import com.joaoczz.backend.presentation.dto.like.LikeResponse;
 import com.joaoczz.backend.service.interfaces.ILikeService;
@@ -34,13 +42,13 @@ public class LikeServiceImpl implements ILikeService {
         if (likePostRepository.existsByUserIdAndPostId(user.getId(), postId)) {
             likePostRepository.deleteByUserIdAndPostId(user.getId(), postId);
             int total = likePostRepository.findByPostId(postId).size();
-            return new LikeResponse("Like eliminado", total);
-        } else {
-            LikePostEntity like = LikePostEntity.builder().user(user).post(post).build();
-            likePostRepository.save(like);
-            int total = likePostRepository.findByPostId(postId).size();
-            return new LikeResponse("Like añadido", total);
+            return new LikeResponse("Like eliminado", total, false);
         }
+
+        LikePostEntity like = LikePostEntity.builder().user(user).post(post).build();
+        likePostRepository.save(like);
+        int total = likePostRepository.findByPostId(postId).size();
+        return new LikeResponse("Like añadido", total, true);
     }
 
     @Override
@@ -54,12 +62,12 @@ public class LikeServiceImpl implements ILikeService {
         if (likeCommentRepository.existsByUserIdAndCommentId(user.getId(), commentId)) {
             likeCommentRepository.deleteByUserIdAndCommentId(user.getId(), commentId);
             int total = likeCommentRepository.findByCommentId(commentId).size();
-            return new LikeResponse("Like eliminado", total);
-        } else {
-            LikeCommentEntity like = LikeCommentEntity.builder().user(user).comment(comment).build();
-            likeCommentRepository.save(like);
-            int total = likeCommentRepository.findByCommentId(commentId).size();
-            return new LikeResponse("Like añadido", total);
+            return new LikeResponse("Like eliminado", total, false);
         }
+
+        LikeCommentEntity like = LikeCommentEntity.builder().user(user).comment(comment).build();
+        likeCommentRepository.save(like);
+        int total = likeCommentRepository.findByCommentId(commentId).size();
+        return new LikeResponse("Like añadido", total, true);
     }
 }

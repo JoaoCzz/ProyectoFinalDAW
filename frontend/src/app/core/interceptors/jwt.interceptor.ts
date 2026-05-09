@@ -3,9 +3,11 @@ import {
   HttpRequest,
   HttpHandler,
   HttpEvent,
-  HttpInterceptor
+  HttpInterceptor,
+  HttpErrorResponse
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
 @Injectable()
@@ -16,6 +18,11 @@ export class JwtInterceptor implements HttpInterceptor {
     const token = this.authService.getToken();
 
     if (token && !request.url.includes('/auth')) {
+      if (this.authService.isTokenExpired(token)) {
+        this.authService.logout();
+        return throwError(() => new Error('Token expired'));
+      }
+
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`
@@ -23,6 +30,14 @@ export class JwtInterceptor implements HttpInterceptor {
       });
     }
 
-    return next.handle(request);
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401 && !request.url.includes('/auth')) {
+          this.authService.logout();
+        }
+
+        return throwError(() => error);
+      })
+    );
   }
 }

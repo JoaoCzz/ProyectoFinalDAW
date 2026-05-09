@@ -6,6 +6,7 @@ export interface Comment {
   username: string;
   postId: number;
   totalLikes: number;
+  likedByCurrentUser: boolean;
 }
 
 export interface CommentRequest {

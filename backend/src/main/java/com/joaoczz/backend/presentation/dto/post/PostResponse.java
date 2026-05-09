@@ -16,5 +16,6 @@ public record PostResponse(
         Long genreId,
         String genreName,
         int totalLikes,
-        int totalComments
+        int totalComments,
+        boolean likedByCurrentUser
 ) {}

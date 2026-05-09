@@ -9,5 +9,6 @@ public record CommentResponse(
         Long userId,
         String username,
         Long postId,
-        int totalLikes
+        int totalLikes,
+        boolean likedByCurrentUser
 ) {}

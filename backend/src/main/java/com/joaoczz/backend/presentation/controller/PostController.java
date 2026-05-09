@@ -37,41 +37,46 @@ public class PostController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener publicación por ID")
-    public ResponseEntity<PostResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(postService.getById(id));
+    public ResponseEntity<PostResponse> getById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(postService.getById(id, authentication != null ? authentication.getName() : null));
     }
 
     @GetMapping
     @Operation(summary = "Listar todas las publicaciones (paginado)")
     public ResponseEntity<Page<PostResponse>> getAll(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getAll(pageable));
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(postService.getAll(pageable, authentication != null ? authentication.getName() : null));
     }
 
     @GetMapping("/search")
     @Operation(summary = "Buscar publicaciones por título, descripción, artista o género")
     public ResponseEntity<Page<PostResponse>> search(
             @RequestParam String q,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.search(q, pageable));
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(postService.search(q, pageable, authentication != null ? authentication.getName() : null));
     }
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Publicaciones de un usuario")
-    public ResponseEntity<List<PostResponse>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(postService.getByUser(userId));
+    public ResponseEntity<List<PostResponse>> getByUser(@PathVariable Long userId, Authentication authentication) {
+        return ResponseEntity.ok(postService.getByUser(userId, authentication != null ? authentication.getName() : null));
     }
 
     @GetMapping("/artist/{artistId}")
     @Operation(summary = "Publicaciones de un artista")
-    public ResponseEntity<List<PostResponse>> getByArtist(@PathVariable Long artistId) {
-        return ResponseEntity.ok(postService.getByArtist(artistId));
+    public ResponseEntity<List<PostResponse>> getByArtist(@PathVariable Long artistId, Authentication authentication) {
+        return ResponseEntity.ok(postService.getByArtist(artistId, authentication != null ? authentication.getName() : null));
     }
 
     @GetMapping("/genre/{genreId}")
     @Operation(summary = "Publicaciones de un género")
-    public ResponseEntity<List<PostResponse>> getByGenre(@PathVariable Long genreId) {
-        return ResponseEntity.ok(postService.getByGenre(genreId));
+    public ResponseEntity<Page<PostResponse>> getByGenre(
+            @PathVariable Long genreId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(postService.getByGenre(genreId, pageable, authentication != null ? authentication.getName() : null));
     }
 
     @PutMapping("/{id}")

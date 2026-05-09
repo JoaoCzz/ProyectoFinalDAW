@@ -14,7 +14,8 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findByUserId(Long userId);
     List<PostEntity> findByArtistId(Long artistId);
-    List<PostEntity> findByGenreId(Long genreId);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "artist", "genre"})
+    Page<PostEntity> findByGenreId(Long genreId, Pageable pageable);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "artist", "genre"})
     java.util.Optional<PostEntity> findById(Long id);

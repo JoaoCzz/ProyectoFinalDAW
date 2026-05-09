@@ -4,6 +4,7 @@ import com.joaoczz.backend.persistence.entity.CommentEntity;
 import com.joaoczz.backend.persistence.entity.PostEntity;
 import com.joaoczz.backend.persistence.entity.UserEntity;
 import com.joaoczz.backend.persistence.repository.CommentRepository;
+import com.joaoczz.backend.persistence.repository.LikeCommentRepository;
 import com.joaoczz.backend.persistence.repository.PostRepository;
 import com.joaoczz.backend.persistence.repository.UserRepository;
 import com.joaoczz.backend.presentation.advice.ResourceNotFoundException;
@@ -26,6 +27,8 @@ public class CommentServiceImpl implements ICommentService {
     private UserRepository userRepository;
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private LikeCommentRepository likeCommentRepository;
 
     @Override
     public CommentResponse create(CommentRequest request, String username) {
@@ -41,12 +44,12 @@ public class CommentServiceImpl implements ICommentService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return toResponse(commentRepository.save(comment));
+        return toResponse(commentRepository.save(comment), username);
     }
 
     @Override
-    public Page<CommentResponse> getByPost(Long postId, Pageable pageable) {
-        return commentRepository.findByPostId(postId, pageable).map(this::toResponse);
+    public Page<CommentResponse> getByPost(Long postId, Pageable pageable, String username) {
+        return commentRepository.findByPostId(postId, pageable).map(comment -> toResponse(comment, username));
     }
 
     @Override
@@ -59,15 +62,25 @@ public class CommentServiceImpl implements ICommentService {
         commentRepository.deleteById(id);
     }
 
-    private CommentResponse toResponse(CommentEntity c) {
+    private CommentResponse toResponse(CommentEntity comment, String username) {
+        boolean likedByCurrentUser = false;
+        if (username != null && comment.getId() != null) {
+            likedByCurrentUser = userRepository.findUserEntityByUsername(username)
+                    .map(user -> likeCommentRepository.existsByUserIdAndCommentId(user.getId(), comment.getId()))
+                    .orElse(false);
+        }
+
+        int totalLikes = comment.getLikes() != null ? comment.getLikes().size() : 0;
+
         return new CommentResponse(
-                c.getId(),
-                c.getDescription(),
-                c.getCreatedAt(),
-                c.getUser().getId(),
-                c.getUser().getUsername(),
-                c.getPost().getId(),
-                c.getLikes().size()
+                comment.getId(),
+                comment.getDescription(),
+                comment.getCreatedAt(),
+                comment.getUser().getId(),
+                comment.getUser().getUsername(),
+                comment.getPost().getId(),
+                totalLikes,
+                likedByCurrentUser
         );
     }
 }

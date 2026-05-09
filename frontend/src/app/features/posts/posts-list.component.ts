@@ -171,6 +171,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
     .subscribe({
       next: (response) => {
         post.totalLikes = response.totalLikes;
+        post.likedByCurrentUser = response.likedByCurrentUser;
         this.cdr.markForCheck();
       },
       error: (err) => {

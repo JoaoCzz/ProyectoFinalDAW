@@ -13,6 +13,7 @@ export interface Post {
   genreName: string;
   totalLikes: number;
   totalComments: number;
+  likedByCurrentUser: boolean;
 }
 
 export interface PostRequest {

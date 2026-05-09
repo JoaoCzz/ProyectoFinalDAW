@@ -9,12 +9,12 @@ import java.util.List;
 
 public interface IPostService {
     PostResponse create(PostRequest request, String username);
-    PostResponse getById(Long id);
-    Page<PostResponse> getAll(Pageable pageable);
-    Page<PostResponse> search(String query, Pageable pageable);
-    List<PostResponse> getByUser(Long userId);
-    List<PostResponse> getByArtist(Long artistId);
-    List<PostResponse> getByGenre(Long genreId);
+    PostResponse getById(Long id, String username);
+    Page<PostResponse> getAll(Pageable pageable, String username);
+    Page<PostResponse> search(String query, Pageable pageable, String username);
+    List<PostResponse> getByUser(Long userId, String username);
+    List<PostResponse> getByArtist(Long artistId, String username);
+    Page<PostResponse> getByGenre(Long genreId, Pageable pageable, String username);
     PostResponse update(Long id, PostRequest request, String username);
     void delete(Long id, String username);
 }

@@ -296,7 +296,11 @@
 }
 
 .like-btn:hover {
-  color: #f43f5e;
+  color: #60a5fa;
+}
+
+.like-btn.active {
+  color: #2563eb;
 }
 
 .td-date {

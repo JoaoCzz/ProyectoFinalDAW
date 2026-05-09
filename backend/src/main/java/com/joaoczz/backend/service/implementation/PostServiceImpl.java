@@ -6,6 +6,7 @@ import com.joaoczz.backend.persistence.entity.PostEntity;
 import com.joaoczz.backend.persistence.entity.UserEntity;
 import com.joaoczz.backend.persistence.repository.ArtistRepository;
 import com.joaoczz.backend.persistence.repository.GenreRepository;
+import com.joaoczz.backend.persistence.repository.LikePostRepository;
 import com.joaoczz.backend.persistence.repository.PostRepository;
 import com.joaoczz.backend.persistence.repository.UserRepository;
 import com.joaoczz.backend.presentation.advice.ResourceNotFoundException;
@@ -32,18 +33,20 @@ public class PostServiceImpl implements IPostService {
     private ArtistRepository artistRepository;
     @Autowired
     private GenreRepository genreRepository;
+    @Autowired
+    private LikePostRepository likePostRepository;
 
     @Override
     public PostResponse create(PostRequest request, String username) {
         UserEntity user = userRepository.findUserEntityByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-        
+
         ArtistEntity artist = null;
         if (request.artistId() != null && request.artistId() > 0) {
             artist = artistRepository.findById(request.artistId())
                     .orElseThrow(() -> new ResourceNotFoundException("Artista no encontrado con id: " + request.artistId()));
         }
-        
+
         GenreEntity genre = genreRepository.findById(request.genreId())
                 .orElseThrow(() -> new ResourceNotFoundException("Género no encontrado con id: " + request.genreId()));
 
@@ -58,37 +61,47 @@ public class PostServiceImpl implements IPostService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return toResponse(postRepository.save(post));
+        return toResponse(postRepository.save(post), user.getId());
     }
 
     @Override
-    public PostResponse getById(Long id) {
-        return toResponse(findOrThrow(id));
+    public PostResponse getById(Long id, String username) {
+        return toResponse(findOrThrow(id), resolveCurrentUserId(username));
     }
 
     @Override
-    public Page<PostResponse> getAll(Pageable pageable) {
-        return postRepository.findAll(pageable).map(this::toResponse);
+    public Page<PostResponse> getAll(Pageable pageable, String username) {
+        Long currentUserId = resolveCurrentUserId(username);
+        return postRepository.findAll(pageable).map(post -> toResponse(post, currentUserId));
     }
 
     @Override
-    public Page<PostResponse> search(String query, Pageable pageable) {
-        return postRepository.search(query, pageable).map(this::toResponse);
+    public Page<PostResponse> search(String query, Pageable pageable, String username) {
+        Long currentUserId = resolveCurrentUserId(username);
+        return postRepository.search(query, pageable).map(post -> toResponse(post, currentUserId));
     }
 
     @Override
-    public List<PostResponse> getByUser(Long userId) {
-        return postRepository.findByUserId(userId).stream().map(this::toResponse).collect(Collectors.toList());
+    public List<PostResponse> getByUser(Long userId, String username) {
+        Long currentUserId = resolveCurrentUserId(username);
+        return postRepository.findByUserId(userId).stream()
+                .map(post -> toResponse(post, currentUserId))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<PostResponse> getByArtist(Long artistId) {
-        return postRepository.findByArtistId(artistId).stream().map(this::toResponse).collect(Collectors.toList());
+    public List<PostResponse> getByArtist(Long artistId, String username) {
+        Long currentUserId = resolveCurrentUserId(username);
+        return postRepository.findByArtistId(artistId).stream()
+                .map(post -> toResponse(post, currentUserId))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<PostResponse> getByGenre(Long genreId) {
-        return postRepository.findByGenreId(genreId).stream().map(this::toResponse).collect(Collectors.toList());
+    public Page<PostResponse> getByGenre(Long genreId, Pageable pageable, String username) {
+        Long currentUserId = resolveCurrentUserId(username);
+        return postRepository.findByGenreId(genreId, pageable)
+                .map(post -> toResponse(post, currentUserId));
     }
 
     @Override
@@ -97,13 +110,13 @@ public class PostServiceImpl implements IPostService {
         if (!post.getUser().getUsername().equals(username)) {
             throw new IllegalArgumentException("No tienes permiso para editar esta publicación");
         }
-        
+
         ArtistEntity artist = null;
         if (request.artistId() != null && request.artistId() > 0) {
             artist = artistRepository.findById(request.artistId())
                     .orElseThrow(() -> new ResourceNotFoundException("Artista no encontrado con id: " + request.artistId()));
         }
-        
+
         GenreEntity genre = genreRepository.findById(request.genreId())
                 .orElseThrow(() -> new ResourceNotFoundException("Género no encontrado con id: " + request.genreId()));
 
@@ -113,7 +126,7 @@ public class PostServiceImpl implements IPostService {
         post.setSelfPromotion(request.isSelfPromotion());
         post.setArtist(artist);
         post.setGenre(genre);
-        return toResponse(postRepository.save(post));
+        return toResponse(postRepository.save(post), post.getUser().getId());
     }
 
     @Override
@@ -130,43 +143,62 @@ public class PostServiceImpl implements IPostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Publicación no encontrada con id: " + id));
     }
 
-    private PostResponse toResponse(PostEntity p) {
-        if (p == null) return null;
-        
+    private PostResponse toResponse(PostEntity post, Long currentUserId) {
+        if (post == null) {
+            return null;
+        }
+
         String artistName = "Artista Independiente";
-        if (p.getArtist() != null) {
+        if (post.getArtist() != null) {
             try {
-                artistName = p.getArtist().getName();
-            } catch (Exception e) {
-                // Si hay error de lazy loading o similar, fallback
+                artistName = post.getArtist().getName();
+            } catch (Exception ignored) {
             }
         }
 
         int likesCount = 0;
         try {
-            likesCount = p.getLikes() != null ? p.getLikes().size() : 0;
-        } catch (Exception e) {}
+            likesCount = post.getLikes() != null ? post.getLikes().size() : 0;
+        } catch (Exception ignored) {
+        }
 
         int commentsCount = 0;
         try {
-            commentsCount = p.getComments() != null ? p.getComments().size() : 0;
-        } catch (Exception e) {}
+            commentsCount = post.getComments() != null ? post.getComments().size() : 0;
+        } catch (Exception ignored) {
+        }
+
+        boolean likedByCurrentUser = false;
+        if (currentUserId != null && post.getId() != null) {
+            likedByCurrentUser = likePostRepository.existsByUserIdAndPostId(currentUserId, post.getId());
+        }
 
         return new PostResponse(
-                p.getId(),
-                p.getTitle(),
-                p.getDescription(),
-                p.getMusicUrl(),
-                p.isSelfPromotion(),
-                p.getCreatedAt(),
-                p.getUser() != null ? p.getUser().getId() : null,
-                p.getUser() != null ? p.getUser().getUsername() : "Usuario desconocido",
-                p.getArtist() != null ? p.getArtist().getId() : null,
+                post.getId(),
+                post.getTitle(),
+                post.getDescription(),
+                post.getMusicUrl(),
+                post.isSelfPromotion(),
+                post.getCreatedAt(),
+                post.getUser() != null ? post.getUser().getId() : null,
+                post.getUser() != null ? post.getUser().getUsername() : "Usuario desconocido",
+                post.getArtist() != null ? post.getArtist().getId() : null,
                 artistName,
-                p.getGenre() != null ? p.getGenre().getId() : null,
-                p.getGenre() != null ? p.getGenre().getName() : "Sin Género",
+                post.getGenre() != null ? post.getGenre().getId() : null,
+                post.getGenre() != null ? post.getGenre().getName() : "Sin Género",
                 likesCount,
-                commentsCount
+                commentsCount,
+                likedByCurrentUser
         );
+    }
+
+    private Long resolveCurrentUserId(String username) {
+        if (username == null || username.isBlank()) {
+            return null;
+        }
+
+        return userRepository.findUserEntityByUsername(username)
+                .map(UserEntity::getId)
+                .orElse(null);
     }
 }

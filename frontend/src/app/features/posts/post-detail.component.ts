@@ -110,6 +110,7 @@ export class PostDetailComponent implements OnInit {
         console.log('Comentarios recibidos:', response.content.length);
         this.comments = response.content;
         this.totalPages = response.totalPages;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error loading comments', err);
@@ -136,8 +137,12 @@ export class PostDetailComponent implements OnInit {
     this.commentService.createComment(commentRequest).subscribe({
       next: (comment) => {
         this.comments.unshift(comment);
+        if (this.post) {
+          this.post.totalComments += 1;
+        }
         this.newCommentText = '';
         this.isSubmittingComment = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.errorMessage = 'Failed to post comment';
@@ -158,7 +163,9 @@ export class PostDetailComponent implements OnInit {
       next: (response) => {
         if (this.post) {
           this.post.totalLikes = response.totalLikes;
+          this.post.likedByCurrentUser = response.likedByCurrentUser;
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error toggling like', err);
@@ -175,6 +182,8 @@ export class PostDetailComponent implements OnInit {
     this.likeService.toggleLikeComment(comment.id).subscribe({
       next: (response) => {
         comment.totalLikes = response.totalLikes;
+        comment.likedByCurrentUser = response.likedByCurrentUser;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error toggling comment like', err);
@@ -187,6 +196,10 @@ export class PostDetailComponent implements OnInit {
       this.commentService.deleteComment(commentId).subscribe({
         next: () => {
           this.comments = this.comments.filter(c => c.id !== commentId);
+          if (this.post && this.post.totalComments > 0) {
+            this.post.totalComments -= 1;
+          }
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.errorMessage = 'Failed to delete comment';

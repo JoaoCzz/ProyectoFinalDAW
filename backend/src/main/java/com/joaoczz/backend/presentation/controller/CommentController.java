@@ -37,8 +37,9 @@ public class CommentController {
     @Operation(summary = "Comentarios de una publicación (paginado)")
     public ResponseEntity<Page<CommentResponse>> getByPost(
             @PathVariable Long postId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(commentService.getByPost(postId, pageable));
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(commentService.getByPost(postId, pageable, authentication != null ? authentication.getName() : null));
     }
 
     @DeleteMapping("/{id}")

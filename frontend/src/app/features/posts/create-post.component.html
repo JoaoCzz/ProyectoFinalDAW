@@ -45,7 +45,7 @@
           />
           <select id="artist" [(ngModel)]="postData.artistId" name="artistId" required class="premium-select">
             <option [value]="0" disabled selected>Seleccionar Artista</option>
-            <option *ngFor="let artist of artists" [value]="artist.id">{{ artist.name }}</option>
+            <option *ngFor="let artist of filteredArtists" [value]="artist.id">{{ artist.name }}</option>
           </select>
         </div>
 
@@ -60,7 +60,7 @@
           />
           <select id="genre" [(ngModel)]="postData.genreId" name="genreId" required class="premium-select">
             <option [value]="0" disabled selected>Seleccionar Género</option>
-            <option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</option>
+            <option *ngFor="let genre of filteredGenres" [value]="genre.id">{{ genre.name }}</option>
           </select>
         </div>
       </div>

@@ -73,7 +73,7 @@
     <p>{{ errorMessage }}</p>
   </div>
 
-  <div *ngIf="!isLoading && filteredPosts.length === 0" class="state-message">
+  <div *ngIf="!isLoading && displayedPosts.length === 0" class="state-message">
     <p>No se encontraron hilos que coincidan con tu búsqueda.</p>
   </div>
 
@@ -108,7 +108,7 @@
             {{ post.totalComments }}
           </div>
           <div class="stat-item" title="Likes">
-            <button class="like-btn" (click)="toggleLike(post); $event.stopPropagation()">
+            <button class="like-btn" [class.active]="post.likedByCurrentUser" (click)="toggleLike(post); $event.stopPropagation()">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
               {{ post.totalLikes }}
             </button>

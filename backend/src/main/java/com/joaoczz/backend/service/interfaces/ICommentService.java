@@ -7,6 +7,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface ICommentService {
     CommentResponse create(CommentRequest request, String username);
-    Page<CommentResponse> getByPost(Long postId, Pageable pageable);
+    Page<CommentResponse> getByPost(Long postId, Pageable pageable, String username);
     void delete(Long id, String username);
 }

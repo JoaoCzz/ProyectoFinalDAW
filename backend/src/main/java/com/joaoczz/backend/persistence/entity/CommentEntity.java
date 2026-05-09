@@ -34,6 +34,7 @@ public class CommentEntity {
     @JoinColumn(name = "post_id", nullable = false)
     private PostEntity post;
 
+    @Builder.Default
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LikeCommentEntity> likes = new ArrayList<>();
 }
