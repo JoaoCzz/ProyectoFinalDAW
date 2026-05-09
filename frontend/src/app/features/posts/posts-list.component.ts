@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PostService } from '../../core/services/post.service';
 import { LikeService } from '../../core/services/like.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -16,7 +18,8 @@ import { Genre } from '../../core/models/genre.model';
   templateUrl: './posts-list.component.html',
   styleUrls: ['./posts-list.component.css']
 })
-export class PostsListComponent implements OnInit {
+export class PostsListComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   posts: Post[] = [];
   filteredPosts: Post[] = [];
   isLoading = true;
@@ -48,7 +51,8 @@ export class PostsListComponent implements OnInit {
     private likeService: LikeService,
     private authService: AuthService,
     private genreService: GenreService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -58,42 +62,57 @@ export class PostsListComponent implements OnInit {
   }
 
   loadGenres(): void {
-    this.genreService.getAllGenres().subscribe({
-      next: (genres) => {
-        this.genres = genres;
-      },
-      error: (err) => console.error('Error loading genres', err)
+    this.genreService.getAllGenres()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (genres) => {
+          this.genres = genres;
+          this.cdr.markForCheck();
+        },
+        error: (err) => console.error('Error loading genres', err)
     });
   }
 
   loadPosts(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     if (this.selectedGenreId) {
-      this.postService.getPostsByGenre(this.selectedGenreId).subscribe({
-        next: (posts) => {
-          this.posts = posts;
-          this.filteredPosts = posts;
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.errorMessage = 'Failed to load posts for this genre';
-          this.isLoading = false;
-        }
-      });
+      this.postService.getPostsByGenre(this.selectedGenreId, this.currentPage, this.pageSize)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.posts = response.content;
+            this.filteredPosts = this.posts;
+            this.totalPages = response.totalPages;
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error('Error loading posts for genre:', err);
+            this.errorMessage = 'Failed to load posts for this genre';
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          }
+        });
     } else {
-      this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
-        next: (response) => {
-          this.posts = response.content;
-          this.filteredPosts = this.posts;
-          this.totalPages = response.totalPages;
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.errorMessage = 'Failed to load posts';
-          this.isLoading = false;
-        }
+      this.postService.getAllPosts(this.currentPage, this.pageSize)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.posts = response.content;
+            this.filteredPosts = this.posts;
+            this.totalPages = response.totalPages;
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error('Error loading posts:', err);
+            this.errorMessage = 'Failed to load posts';
+            this.isLoading = false;
+            this.cdr.markForCheck();
+          }
       });
     }
   }
@@ -101,25 +120,42 @@ export class PostsListComponent implements OnInit {
   filterByGenre(genreId: number | null): void {
     this.selectedGenreId = genreId;
     this.currentPage = 0;
+    this.searchQuery = ''; // Limpiar búsqueda
+    this.genreChipSearch = ''; // Limpiar filtro de chips
+    this.loadPosts();
+  }
+
+   switchTab(tab: 'recommendations' | 'promotions'): void {
+    this.activeTab = tab;
+    this.currentPage = 0;
+    this.searchQuery = ''; // Limpiar búsqueda
+    this.selectedGenreId = null; // Limpiar filtro de género
+    this.genreChipSearch = ''; // Limpiar filtro de chips
     this.loadPosts();
   }
 
   searchPosts(): void {
     if (!this.searchQuery.trim()) {
       this.filteredPosts = this.posts;
+      this.cdr.markForCheck();
       return;
     }
 
     this.isLoading = true;
-    this.postService.searchPosts(this.searchQuery, this.currentPage, this.pageSize).subscribe({
+    this.postService.searchPosts(this.searchQuery, this.currentPage, this.pageSize)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (response) => {
         this.filteredPosts = response.content;
         this.totalPages = response.totalPages;
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
+        console.error('Error:', err);
         this.errorMessage = 'Search failed';
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -130,9 +166,12 @@ export class PostsListComponent implements OnInit {
       return;
     }
 
-    this.likeService.toggleLikePost(post.id).subscribe({
+    this.likeService.toggleLikePost(post.id)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (response) => {
         post.totalLikes = response.totalLikes;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error toggling like', err);
@@ -156,5 +195,10 @@ export class PostsListComponent implements OnInit {
       this.currentPage++;
       this.loadPosts();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

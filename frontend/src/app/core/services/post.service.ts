@@ -45,9 +45,13 @@ export class PostService {
     return this.http.get<Post[]>(`${this.apiUrl}/artist/${artistId}`);
   }
 
-  getPostsByGenre(genreId: number): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.apiUrl}/genre/${genreId}`);
-  }
+  getPostsByGenre(genreId: number, page: number = 0, size: number = 10): Observable<any> {
+      const params = new HttpParams()
+        .set('page', page.toString())
+        .set('size', size.toString())
+        .set('sort', 'createdAt,desc');
+      return this.http.get<any>(`${this.apiUrl}/genre/${genreId}`, { params });
+  }   
 
   updatePost(id: number, request: PostRequest): Observable<PostResponse> {
     return this.http.put<PostResponse>(`${this.apiUrl}/${id}`, request);
