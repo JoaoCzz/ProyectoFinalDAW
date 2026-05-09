@@ -1,0 +1,55 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <a routerLink="/posts" class="logo">
+        <span class="logo-icon">🎵</span>
+        <span class="logo-text">MusicShare</span>
+      </a>
+    </div>
+
+    <button class="menu-toggle" (click)="toggleSidebar()" aria-label="Abrir menú">
+      <div class="hamburger" [class.open]="sidebarOpen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+
+    <div class="navbar-menu" [class.active]="sidebarOpen">
+      <div class="navbar-links">
+        <a routerLink="/posts" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()" class="nav-link">
+          Inicio
+        </a>
+
+        <a *ngIf="isAuthenticated" routerLink="/posts/create" routerLinkActive="active" (click)="closeSidebar()" class="nav-link">
+          Subir Música
+        </a>
+
+        <a *ngIf="isAuthenticated && currentUser?.roles?.includes('ADMIN')" routerLink="/admin" routerLinkActive="active" (click)="closeSidebar()" class="nav-link admin-link">
+          Administración
+        </a>
+      </div>
+
+      <div class="navbar-auth">
+        <div *ngIf="isAuthenticated" class="user-profile">
+          <a routerLink="/profile" class="user-info-link" (click)="closeSidebar()">
+            <div class="user-info">
+              <span class="username">{{ currentUser?.username }}</span>
+              <span class="user-role">{{ currentUser?.roles?.join(', ') }}</span>
+            </div>
+          </a>
+          <button (click)="logout()" class="btn-logout" title="Cerrar sesión">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+        </div>
+
+        <div *ngIf="!isAuthenticated" class="auth-buttons">
+          <a routerLink="/auth/login" class="btn-nav btn-login" (click)="closeSidebar()">Acceder</a>
+          <a routerLink="/auth/register" class="btn-nav btn-register" (click)="closeSidebar()">Registrarse</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="navbar-overlay" *ngIf="sidebarOpen" (click)="closeSidebar()"></div>

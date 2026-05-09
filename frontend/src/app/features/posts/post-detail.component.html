@@ -1,0 +1,137 @@
+<div class="post-detail-page" *ngIf="post">
+  <header class="detail-header">
+    <button class="btn-back" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Volver
+    </button>
+  </header>
+
+  <div class="main-layout">
+    <article class="post-content">
+      <div class="content-card">
+        <div class="post-info">
+          <div class="post-tags">
+            <span class="artist-tag">{{ post.artistName || 'Artista Independiente' }}</span>
+            <span class="genre-tag">{{ post.genreName || 'Sin Género' }}</span>
+          </div>
+          <h1 class="post-title">{{ post.title }}</h1>
+          <div class="post-author">
+            <div class="avatar">{{ (post.username.charAt(0) || '?').toUpperCase() }}</div>
+            <div class="author-info">
+              <span class="author-name">{{ post.username }}</span>
+              <span class="post-date">Publicado el {{ post.createdAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-body">
+          <p>{{ post.description || 'Sin descripción disponible.' }}</p>
+          
+          <div class="music-card">
+            <div class="music-preview">
+              <div *ngIf="safeEmbedHtml" class="embed-container" [innerHTML]="safeEmbedHtml"></div>
+              <img *ngIf="!safeEmbedHtml && preview?.image" [src]="preview.image" alt="preview image" />
+              <div *ngIf="!safeEmbedHtml && !preview?.image" class="preview-placeholder">Enlace</div>
+            </div>
+
+            <div class="music-action">
+              <a [href]="post.musicUrl" target="_blank" class="btn-premium btn-primary btn-music">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                Apoyar al Artista (Escuchar Música)
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-actions">
+          <button class="action-btn like-btn" [class.active]="false" (click)="toggleLike()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>{{ post.totalLikes }} Me gusta</span>
+          </button>
+          <div class="action-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span>{{ post.totalComments }} Comentarios</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="comments-section">
+        <h2 class="section-title">Comentarios</h2>
+        
+        <div class="comment-input-card" *ngIf="isAuthenticated">
+          <div class="avatar">{{ (currentUser?.username?.charAt(0) || '?').toUpperCase() }}</div>
+          <div class="input-container">
+            <textarea
+              [(ngModel)]="newCommentText"
+              placeholder="Escribe un comentario..."
+              rows="2"
+              name="newCommentText"
+            ></textarea>
+            <button class="btn-premium btn-primary" [disabled]="!newCommentText.trim()" (click)="submitComment()">
+              Publicar Comentario
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!isAuthenticated" class="login-prompt">
+          <p>Por favor <a routerLink="/auth/login">inicia sesión</a> para participar en la conversación.</p>
+        </div>
+
+        <div class="comments-list">
+          <div *ngFor="let comment of comments" class="comment-card">
+            <div class="comment-header">
+              <div class="avatar-sm">{{ (comment.username.charAt(0) || '?').toUpperCase() }}</div>
+              <div class="comment-meta">
+                <span class="comment-author">{{ comment.username }}</span>
+                <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
+              </div>
+            </div>
+            <p class="comment-text">{{ comment.description }}</p>
+          </div>
+          
+          <div *ngIf="comments.length === 0" class="empty-comments">
+            <p>Aún no hay comentarios. ¡Sé el primero en compartir tu opinión!</p>
+          </div>
+        </div>
+      </section>
+    </article>
+
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <h3>Sobre el Artista</h3>
+        <div class="artist-info" *ngIf="post.artistId">
+          <div class="artist-avatar">{{ (post.artistName.charAt(0) || '?').toUpperCase() }}</div>
+          <div class="artist-detail">
+            <h4>{{ post.artistName }}</h4>
+            <p>Género: {{ post.genreName }}</p>
+          </div>
+        </div>
+        <div class="artist-info" *ngIf="!post.artistId">
+          <div class="artist-avatar">?</div>
+          <div class="artist-detail">
+            <h4>Artista Independiente</h4>
+            <p>Este usuario ha subido su propia música.</p>
+          </div>
+        </div>
+        <a *ngIf="post.artistName" 
+           [href]="'https://open.spotify.com/search/' + post.artistName + '/artists'" 
+           target="_blank" 
+           class="btn-premium btn-outline btn-full"
+           style="text-decoration: none; text-align: center; display: block;">
+          Ver Perfil en Spotify
+        </a>
+        <button *ngIf="!post.artistName" class="btn-premium btn-outline btn-full">Ver Perfil del Artista</button>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Sugerencias</h3>
+        <p class="muted-text">Próximamente...</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="loading-detail">
+  <div class="spinner"></div>
+  <span>Cargando detalles de la canción...</span>
+</div>

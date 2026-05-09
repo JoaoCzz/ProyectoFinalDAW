@@ -1,5 +1,6 @@
 package com.joaoczz.backend.service.implementation;
 
+import com.joaoczz.backend.persistence.entity.RoleEnum;
 import com.joaoczz.backend.persistence.entity.RoleEntity;
 import com.joaoczz.backend.persistence.entity.UserEntity;
 import com.joaoczz.backend.persistence.repository.RoleRepository;
@@ -108,7 +109,7 @@ public class UserDetailServiceimpl implements UserDetailsService {
 
 
         Set<RoleEntity> roleEntitySet = roleRepository
-                .findRoleEntitiesByRoleEnumIn(roleRequest)
+                .findRoleEntitiesByRoleEnumIn(roleRequest.stream().map(RoleEnum::valueOf).collect(Collectors.toList()))
                 .stream()
                 .collect(Collectors.toSet());
 

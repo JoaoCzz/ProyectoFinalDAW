@@ -18,9 +18,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
     private JWTUtils jwtUtils;
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenValidator.class);
 
     public JwtTokenValidator(JWTUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
@@ -30,30 +33,30 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String jwtToken = request.getHeader(HttpHeaders.PROXY_AUTHORIZATION);
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (jwtToken != null) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwtToken = authHeader.substring(7); // Los primeros 7 caracteres son "Bearer "
 
-            jwtToken = jwtToken.substring(7); // Los primeros 7 caracteres son "Bearer "
-
-
+            try {
             DecodedJWT decodedJWT = jwtUtils.validateToken(jwtToken);
-
 
             String username = jwtUtils.extractUsername(decodedJWT);
             String stringAuthorities = jwtUtils.getSpecificClaim(decodedJWT, "authorities").asString();
 
             Collection<? extends GrantedAuthority> authorities =
-                    AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
-
+                AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
 
             Authentication authentication =
-                    new UsernamePasswordAuthenticationToken(username, null, authorities);
-
+                new UsernamePasswordAuthenticationToken(username, null, authorities);
 
             SecurityContext context = SecurityContextHolder.getContext();
             context.setAuthentication(authentication);
             SecurityContextHolder.setContext(context);
+            } catch (Exception ex) {
+            // Token inválido o error al validar: no interrumpir la petición, continuar sin auth
+            logger.warn("JWT validation failed: {}", ex.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);

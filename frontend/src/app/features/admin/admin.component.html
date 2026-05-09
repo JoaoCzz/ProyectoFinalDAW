@@ -1,0 +1,179 @@
+<div class="admin-dashboard">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Panel de Control</h1>
+      <p>Gestión centralizada de usuarios y roles del sistema.</p>
+    </div>
+  </header>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="cards-grid">
+    <!-- USUARIOS Y ROLES -->
+    <div class="dashboard-card">
+      <div class="card-header header-actions">
+        <h2>USUARIOS Y ROLES</h2>
+        <button class="btn-refresh" (click)="loadUsers()">Sincronizar</button>
+      </div>
+      <div class="card-body small-preview">
+        <ul class="item-list">
+          <li *ngFor="let user of users | slice:0:4">
+            <div class="preview-row">
+              <div class="avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+              <div class="preview-info">
+                <div class="username">{{ user.username }}</div>
+                <div class="email">{{ user.email }}</div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="card-footer">
+        <button class="btn-secondary" (click)="openUsersModal()">Ver detalles de Usuarios/Roles</button>
+      </div>
+    </div>
+
+    <!-- ARTISTAS -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>ARTISTAS</h2>
+      </div>
+      <div class="card-body small-preview">
+        <ul class="item-list">
+          <li *ngFor="let a of artists | slice:0:3">
+            <div class="preview-row">
+              <div class="avatar">🎤</div>
+              <div class="preview-info">
+                <div class="artist-name">{{ a.name }}</div>
+                <div class="artist-meta">{{ a.type || 'SOLO' }}</div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="card-footer">
+        <button class="btn-secondary" (click)="openArtistModal()">Gestionar Artistas</button>
+      </div>
+    </div>
+
+    <!-- GÉNEROS -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>GÉNEROS</h2>
+      </div>
+      <div class="card-body small-preview">
+        <ul class="item-list">
+          <li *ngFor="let g of genres | slice:0:4">
+            <div class="preview-row">
+              <div class="avatar">🎵</div>
+              <div class="preview-info">
+                <div class="artist-name">{{ g.name }}</div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="card-footer">
+        <button class="btn-secondary" (click)="openGenreModal()">Gestionar Géneros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Modal -->
+  <div *ngIf="showUsersModal" class="modal-overlay" (click)="closeUsersModal()">
+    <div class="modal large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Usuarios Registrados</h3>
+        <button class="close-btn" (click)="closeUsersModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-container" [class.loading]="isLoading">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Nombre Completo</th>
+                <th>Rol Actual</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users; trackBy: trackByUserId">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+                    <span class="username">{{ user.username }}</span>
+                  </div>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.name }} {{ user.surname }}</td>
+                <td>
+                  <span class="role-badge" [attr.data-role]="user.roles[0] || 'USER'">
+                    {{ user.roles[0] || 'USER' }}
+                  </span>
+                </td>
+                <td>
+                  <select class="role-select" (change)="updateRole(user, $event)">
+                    <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.roles.includes(role)">
+                      {{ role }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="isLoading" class="loading-overlay"><div class="spinner"></div></div>
+          <div *ngIf="!isLoading && users.length === 0" class="empty-state">No hay usuarios registrados.</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeUsersModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artist Modal -->
+  <div *ngIf="showArtistModal" class="modal-overlay" (click)="closeArtistModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Crear Artista</h3>
+        <button class="close-btn" (click)="closeArtistModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input class="form-control" placeholder="Nombre del artista" [(ngModel)]="newArtistName" />
+        <select class="form-control small" [(ngModel)]="newArtistType">
+          <option value="">Tipo</option>
+          <option value="SOLO">SOLO</option>
+          <option value="BAND">BAND</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeArtistModal()">Cancelar</button>
+        <button class="btn-primary" (click)="createArtist()">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Genre Modal -->
+  <div *ngIf="showGenreModal" class="modal-overlay" (click)="closeGenreModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Crear Género</h3>
+        <button class="close-btn" (click)="closeGenreModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input class="form-control" placeholder="Nombre del género" [(ngModel)]="newGenreName" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeGenreModal()">Cancelar</button>
+        <button class="btn-primary" (click)="createGenre()">Crear</button>
+      </div>
+    </div>
+  </div>

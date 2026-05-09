@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Variables de entorno locales - NUNCA subir a GitHub
+.env
+*.env
+
+# Archivos de configuración con secretos
+application-local.properties
+application-secret.properties

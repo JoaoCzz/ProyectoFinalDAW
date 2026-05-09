@@ -1,0 +1,86 @@
+<div class="profile-settings">
+  <header class="settings-header">
+    <h1>Configuración de Cuenta</h1>
+    <p>Gestiona tus datos personales y seguridad.</p>
+  </header>
+
+  <div class="settings-grid">
+    <aside class="settings-sidebar">
+      <div class="user-summary">
+        <div class="large-avatar">{{ user?.username?.charAt(0)?.toUpperCase() }}</div>
+        <div class="user-details">
+          <h3>{{ user?.username }}</h3>
+          <p>{{ user?.email }}</p>
+        </div>
+      </div>
+      <nav class="settings-nav">
+        <a class="nav-item active">Seguridad</a>
+        <a class="nav-item disabled">Datos Personales (Próximamente)</a>
+      </nav>
+    </aside>
+
+    <main class="settings-content">
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>Cambiar Contraseña</h2>
+        </div>
+        
+        <form (ngSubmit)="updatePassword()" class="settings-form">
+          <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+          </div>
+          
+          <div *ngIf="errorMessage" class="alert alert-error">
+            {{ errorMessage }}
+          </div>
+
+          <div class="form-group">
+            <label for="oldPassword">Contraseña Actual</label>
+            <input
+              type="password"
+              id="oldPassword"
+              [(ngModel)]="oldPassword"
+              name="oldPassword"
+              required
+              placeholder="••••••••"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">Nueva Contraseña</label>
+            <input
+              type="password"
+              id="newPassword"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              required
+              placeholder="••••••••"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar Nueva Contraseña</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+              placeholder="••••••••"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" [disabled]="isLoading || !oldPassword || !newPassword" class="btn-premium btn-primary">
+              <span *ngIf="!isLoading">Actualizar Seguridad</span>
+              <div *ngIf="isLoading" class="loader-sm"></div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>

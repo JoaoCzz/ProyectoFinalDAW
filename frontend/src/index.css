@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  height: 100dvh;
+  font-family: "Inter", sans-serif;
+}
+
+/* layout principal */
+.main-content {
+  min-height: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* responsive */
+@media screen and (max-width: 650px) {
+  .main-content {
+    flex-direction: column;
+  }
+}
