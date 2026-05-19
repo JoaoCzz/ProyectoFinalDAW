@@ -6,6 +6,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: proyectofinal-backend-container
+    ports:
+      - "8080:8080"
     # Al usar modo host, el contenedor comparte la red con AWS.
     # Así puede conectarse a tu MySQL de siempre usando 'localhost' en tu application.properties
     network_mode: "host"
