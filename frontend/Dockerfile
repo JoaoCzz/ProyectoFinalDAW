@@ -13,10 +13,10 @@ RUN npm run build -- --configuration=production
 # Etapa 2: Servidor web para producción (Nginx)
 FROM nginx:1.25-alpine
 
-# Apuntamos directamente a /app/dist/frontend
-COPY --from=build /app/dist/frontend /usr/share/nginx/html
+# Añadimos /browser al final de la ruta
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
-# Copiamos la configuración antes de arrancar el servidor
+# Copiamos la configuración de Nginx proxy
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
