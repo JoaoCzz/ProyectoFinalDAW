@@ -28,7 +28,10 @@
 }
 
 .logo-icon {
-  color: var(--primary);
+  width: 28px;
+  height: 28px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .navbar-menu {
