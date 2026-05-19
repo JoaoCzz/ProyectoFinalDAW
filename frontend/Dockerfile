@@ -14,9 +14,12 @@ RUN npm run build -- --configuration=production
 FROM nginx:1.25-alpine
 
 # Copiamos los archivos compilados al directorio de Nginx
-# Nota: Revisa si tu framework compila en 'dist/tu-app-name' o solo 'dist'
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# ¡PASO CLAVE! Copiamos tu configuración antes de arrancar el servidor
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
+# El comando de arranque siempre se queda al final del todo
 CMD ["nginx", "-g", "daemon off;"]
