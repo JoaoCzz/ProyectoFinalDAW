@@ -2,6 +2,7 @@ package com.joaoczz.backend.service.implementation;
 
 import com.joaoczz.backend.persistence.entity.CommentEntity;
 import com.joaoczz.backend.persistence.entity.PostEntity;
+import com.joaoczz.backend.persistence.entity.RoleEnum;
 import com.joaoczz.backend.persistence.entity.UserEntity;
 import com.joaoczz.backend.persistence.repository.CommentRepository;
 import com.joaoczz.backend.persistence.repository.LikeCommentRepository;
@@ -56,7 +57,14 @@ public class CommentServiceImpl implements ICommentService {
     public void delete(Long id, String username) {
         CommentEntity comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comentario no encontrado con id: " + id));
-        if (!comment.getUser().getUsername().equals(username)) {
+        UserEntity requester = userRepository.findUserEntityByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        boolean isOwner = comment.getUser().getUsername().equals(username);
+        boolean isAdmin = requester.getRoles().stream()
+                .anyMatch(role -> role.getRoleEnum() == RoleEnum.ADMIN);
+
+        if (!isOwner && !isAdmin) {
             throw new IllegalArgumentException("No tienes permiso para eliminar este comentario");
         }
         commentRepository.deleteById(id);

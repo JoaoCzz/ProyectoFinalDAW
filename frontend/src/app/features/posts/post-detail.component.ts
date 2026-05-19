@@ -30,6 +30,7 @@ export class PostDetailComponent implements OnInit {
   isAuthenticated = false;
   currentUser: any = null;
   currentUserId = 0;
+  isAdmin = false;
   currentPage = 0;
   pageSize = 10;
   totalPages = 0;
@@ -53,6 +54,7 @@ export class PostDetailComponent implements OnInit {
     if (user) {
       this.currentUser = user;
       this.currentUserId = user.id;
+      this.isAdmin = Array.isArray(user.roles) && user.roles.includes('ADMIN');
     }
 
     this.route.params.subscribe(params => {
@@ -206,6 +208,31 @@ export class PostDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  deletePost(): void {
+    if (!this.post) {
+      return;
+    }
+
+    if (confirm('Are you sure you want to delete this post?')) {
+      this.postService.deletePost(this.post.id).subscribe({
+        next: () => {
+          this.router.navigate(['/posts']);
+        },
+        error: () => {
+          this.errorMessage = 'Failed to delete post';
+        }
+      });
+    }
+  }
+
+  canDeletePost(post: Post | null): boolean {
+    return !!post && this.isAuthenticated && (post.userId === this.currentUserId || this.isAdmin);
+  }
+
+  canDeleteComment(comment: Comment): boolean {
+    return this.isAuthenticated && (comment.userId === this.currentUserId || this.isAdmin);
   }
 
   previousPage(): void {

@@ -3,6 +3,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { AdminGuard } from './core/guards/admin.guard';
 import { LoginComponent } from './features/auth/login.component';
 import { RegisterComponent } from './features/auth/register.component';
+import { LegalComponent } from './features/legal/legal.component';
 import { PostsListComponent } from './features/posts/posts-list.component';
 import { PostDetailComponent } from './features/posts/post-detail.component';
 import { CreatePostComponent } from './features/posts/create-post.component';
@@ -27,6 +28,8 @@ export const routes: Routes = [
       { path: ':id', component: PostDetailComponent }
     ]
   },
+
+  { path: 'legal', component: LegalComponent },
 
   {
     path: 'admin',

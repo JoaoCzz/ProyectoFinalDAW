@@ -3,6 +3,7 @@ package com.joaoczz.backend.service.implementation;
 import com.joaoczz.backend.persistence.entity.ArtistEntity;
 import com.joaoczz.backend.persistence.entity.GenreEntity;
 import com.joaoczz.backend.persistence.entity.PostEntity;
+import com.joaoczz.backend.persistence.entity.RoleEnum;
 import com.joaoczz.backend.persistence.entity.UserEntity;
 import com.joaoczz.backend.persistence.repository.ArtistRepository;
 import com.joaoczz.backend.persistence.repository.GenreRepository;
@@ -132,7 +133,14 @@ public class PostServiceImpl implements IPostService {
     @Override
     public void delete(Long id, String username) {
         PostEntity post = findOrThrow(id);
-        if (!post.getUser().getUsername().equals(username)) {
+        UserEntity requester = userRepository.findUserEntityByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        boolean isOwner = post.getUser().getUsername().equals(username);
+        boolean isAdmin = requester.getRoles().stream()
+                .anyMatch(role -> role.getRoleEnum() == RoleEnum.ADMIN);
+
+        if (!isOwner && !isAdmin) {
             throw new IllegalArgumentException("No tienes permiso para eliminar esta publicación");
         }
         postRepository.deleteById(id);

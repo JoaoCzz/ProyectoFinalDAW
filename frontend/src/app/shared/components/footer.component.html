@@ -1,30 +1,24 @@
 <footer class="footer">
   <div class="footer-container">
     <div class="footer-content">
-      <div class="footer-brand">
-        <span class="footer-logo">🎵 MusicShare</span>
-        <p class="footer-tagline">Share your sound, find your vibe.</p>
+      <div class="footer-legal-note">
+        <h4>Sobre el contenido musical</h4>
+        <p>
+          MusicShare es solo un foro de debate y descubrimiento musical. No somos propietarios de la musica enlazada o
+          compartida por los usuarios; los derechos pertenecen a sus autores o titulares correspondientes.
+        </p>
       </div>
 
       <div class="footer-links">
         <div class="link-group">
-          <h4>Platform</h4>
-          <a routerLink="/posts">Explore</a>
-          <a routerLink="/posts/create">Create</a>
-          <a href="#">Top Artists</a>
-        </div>
-        
-        <div class="link-group">
-          <h4>Support</h4>
-          <a href="#">Help Center</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Privacy Policy</a>
+          <h4>Legal</h4>
+          <a routerLink="/legal">Aviso legal</a>
         </div>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>&copy; 2026 MusicShare. Created with ❤️ for music lovers.</p>
+      <p>&copy; {{ currentYear }} MusicShare. Foro creado para compartir y comentar musica.</p>
       <div class="social-icons">
         <a href="#" aria-label="Github"><i class="icon-github"></i></a>
         <a href="#" aria-label="Twitter"><i class="icon-twitter"></i></a>

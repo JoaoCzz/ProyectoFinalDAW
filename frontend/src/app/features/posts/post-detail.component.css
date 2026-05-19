@@ -156,6 +156,10 @@
   color: var(--text-primary);
 }
 
+.delete-post-btn:hover {
+  color: #ef4444;
+}
+
 .like-btn.active {
   color: #2563eb;
 }
