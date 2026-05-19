@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: proyectofinal-backend-container
+    # Al usar modo host, el contenedor comparte la red con AWS.
+    # Así puede conectarse a tu MySQL de siempre usando 'localhost' en tu application.properties
+    network_mode: "host"
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/ProyectoTFG
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: proyectofinal-frontend-container
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
